@@ -1,0 +1,66 @@
+# DeepSeek Chat Configuration Example
+# Copy this file to config.yaml and fill in your values
+
+# API Settings
+api:
+  # Your DeepSeek API Key (required)
+  # Get one at: https://platform.deepseek.com/api_keys
+  api_key: "your-api-key-here"
+  
+  # API Endpoint URL
+  endpoint: "https://api.deepseek.com"
+  
+  # Request timeout in seconds
+  timeout: 30
+  
+  # Read timeout in seconds (for long responses)
+  read_timeout: 120
+
+# Model Settings
+model:
+  # Default model to use
+  # Options: deepseek-chat, deepseek-reasoner, deepseek-v4-flash, deepseek-v4-pro
+  default_model: "deepseek-chat"
+  
+  # Enable thinking/reasoning mode by default
+  thinking_enabled: false
+  
+  # Temperature (0.0 to 2.0)
+  temperature: 0.7
+  
+  # Maximum tokens to generate
+  max_tokens: 2048
+  
+  # Top-p sampling parameter
+  top_p: 1.0
+
+# Storage Settings
+storage:
+  # Data directory path (default: ~/.deepseek-chat-app)
+  data_dir: null  # null uses default
+  
+  # Auto-save interval in seconds
+  auto_save_interval: 60
+
+# UI Settings (for future GUI implementation)
+ui:
+  # Window size
+  window_width: 1200
+  window_height: 800
+  
+  # Theme: light, dark
+  theme: "light"
+  
+  # Font size
+  font_size: 14
+
+# Logging Settings
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Log file path (null disables file logging)
+  file: null
+  
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
