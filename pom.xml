@@ -1,24 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?><project xmlns="http://maven.apache.org/POM/4.0.0"
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <modelVersion>4
+
     <groupId>com.deepseek</groupId>
     <artifactId>deepseek-chat-app</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-    <pack
+
     <name>DeepSeek AI Chat</name>
-    <description>A console-based AI chat application that connects to the DeepSeek API,
-        tracks token usage, and displays remaining balance in real time.</description>
-       
+    <description>A desktop AI chat application with role-playing features, connecting to the DeepSeek API.</description>
+
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-    </properties
+
     <dependencies>
         <!-- OkHttp for HTTP client -->
         <dependency>
@@ -32,8 +32,29 @@
             <artifactId>gson</artifactId>
             <version>2.11.0</version>
         </dependency>
+        <!-- JavaFX dependencies -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>17.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>17.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>17.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>17.0.2</version>
+        </dependency>
     </dependencies>
-   
+
     <build>
         <plugins>
             <!-- Compiler plugin to ensure Java 17 -->
@@ -53,7 +74,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.deepseek.chat.DeepSeekChat</mainClass>
+                            <mainClass>com.deepseek.ui.ChatApplication</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
