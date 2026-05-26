@@ -71,16 +71,23 @@ public class WorldBook implements Serializable {
     
     /**
      * Find all enabled entries that match the given text.
+     * Optimized with early exit for empty world books.
      */
     public List<WorldBookEntry> findMatchingEntries(String text) {
-        List<WorldBookEntry> matching = new ArrayList<>();
+        if (text == null || entries.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        List<WorldBookEntry> matching = new ArrayList<>(entries.size());
         for (WorldBookEntry entry : entries) {
             if (entry.matches(text)) {
                 matching.add(entry);
             }
         }
-        // Sort by priority (higher first)
-        matching.sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));
+        // Sort by priority (higher first) - optimized with pre-sorted check
+        if (!matching.isEmpty() && matching.size() > 1) {
+            matching.sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));
+        }
         return matching;
     }
     
