@@ -409,9 +409,11 @@ public class ConversationLogic {
             context.add(sysMsg);
         }
         
-        // Add conversation history
+        // Add conversation history (excluding SYSTEM messages to avoid duplicates)
         for (Message msg : conversation.getMessages()) {
-            context.add(msg);
+            if (msg.getRole() != Message.Role.SYSTEM) {
+                context.add(msg);
+            }
         }
         
         return context;

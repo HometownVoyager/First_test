@@ -11,6 +11,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 /**
  * Main application entry point for the JavaFX desktop application.
  */
@@ -397,7 +399,13 @@ public class ChatApplication extends Application {
     }
     
     private void addParticipant(Conversation conversation) {
-        ChoiceDialog<RoleCard> dialog = new ChoiceDialog<>(logic.getAllRoleCards().get(0), logic.getAllRoleCards());
+        List<RoleCard> allRoles = logic.getAllRoleCards();
+        if (allRoles.isEmpty()) {
+            showError("No role cards available. Please create a role card first.");
+            return;
+        }
+        
+        ChoiceDialog<RoleCard> dialog = new ChoiceDialog<>(allRoles.get(0), allRoles);
         dialog.setTitle("Add Participant");
         dialog.setHeaderText("Select a role to add:");
         

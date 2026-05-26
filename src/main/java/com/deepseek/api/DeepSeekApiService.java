@@ -100,8 +100,17 @@ public class DeepSeekApiService {
                 throw new IOException("API request failed with status " + response.code() + ": " + errorBody);
             }
             
-            String responseBody = response.body().string();
-            JsonObject jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
+            String responseBody = response.body() != null ? response.body().string() : "";
+            if (responseBody.isEmpty()) {
+                throw new IOException("Empty response body from API");
+            }
+            
+            JsonObject jsonResponse;
+            try {
+                jsonResponse = JsonParser.parseString(responseBody).getAsJsonObject();
+            } catch (JsonParseException e) {
+                throw new IOException("Failed to parse JSON response: " + e.getMessage());
+            }
             
             // Extract choices
             JsonArray choices = jsonResponse.getAsJsonArray("choices");
