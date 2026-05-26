@@ -131,6 +131,7 @@ public class StorageManager {
                     com.google.gson.reflect.TypeToken.getParameterized(List.class, clazz).getType());
             }
         } catch (Exception e) {
+            System.err.println("Error loading " + filePath + ": " + e.getMessage());
             e.printStackTrace();
         }
         return new ArrayList<>();
@@ -138,12 +139,23 @@ public class StorageManager {
     
     private <T> void saveList(String filePath, List<T> items) {
         File file = new File(filePath);
+        File parentDir = file.getParentFile();
+        
+        // Ensure parent directory exists
+        if (parentDir != null && !parentDir.exists()) {
+            if (!parentDir.mkdirs()) {
+                System.err.println("Failed to create directory: " + parentDir.getAbsolutePath());
+                return;
+            }
+        }
+        
         JsonObject root = new JsonObject();
         root.add("items", gson.toJsonTree(items));
         
         try (Writer writer = new FileWriter(file, StandardCharsets.UTF_8)) {
             gson.toJson(root, writer);
         } catch (IOException e) {
+            System.err.println("Error saving " + filePath + ": " + e.getMessage());
             e.printStackTrace();
         }
     }
