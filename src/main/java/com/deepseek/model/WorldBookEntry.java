@@ -3,6 +3,7 @@ package com.deepseek.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Represents a World Info / Lorebook entry compatible with SillyTavern format.
@@ -20,6 +21,10 @@ public class WorldBookEntry implements Serializable {
     private double selectivity; // Match threshold (0-1)
     private boolean useRegex; // Whether key is a regex pattern
     private List<String> keys; // Alternative keys list
+    
+    // Cached compiled patterns for regex matching (performance optimization)
+    private transient List<Pattern> compiledPatterns;
+    private transient boolean patternsCompiled = false;
     
     public enum InsertPosition {
         BEFORE, // Insert before user message
@@ -52,6 +57,7 @@ public class WorldBookEntry implements Serializable {
     public String getKey() { return key; }
     public void setKey(String key) { 
         this.key = key;
+        this.patternsCompiled = false; // Invalidate cached patterns
         if (key != null) {
             this.keys = List.of(key.split("\\s*,\\s*"));
         }
@@ -79,33 +85,60 @@ public class WorldBookEntry implements Serializable {
     public void setUseRegex(boolean useRegex) { this.useRegex = useRegex; }
     
     public List<String> getKeys() { return keys; }
-    public void setKeys(List<String> keys) { this.keys = keys; }
+    public void setKeys(List<String> keys) { 
+        this.keys = keys; 
+        this.patternsCompiled = false; // Invalidate cached patterns
+    }
     
     /**
-     * Check if the given text matches any of the trigger keys.
+     * Compile regex patterns for all keys (lazy initialization).
      */
-    public boolean matches(String text) {
-        if (!enabled || text == null) {
-            return false;
+    private void ensurePatternsCompiled() {
+        if (patternsCompiled || !useRegex) {
+            return;
         }
-        String lowerText = text.toLowerCase();
+        
+        compiledPatterns = new ArrayList<>(keys.size());
         for (String k : keys) {
-            if (k == null || k.trim().isEmpty()) continue;
-            if (useRegex) {
+            if (k != null && !k.trim().isEmpty()) {
                 try {
-                    if (lowerText.matches(k.toLowerCase())) {
-                        return true;
-                    }
+                    compiledPatterns.add(Pattern.compile(k, Pattern.CASE_INSENSITIVE));
                 } catch (Exception e) {
                     // Invalid regex, skip
                 }
-            } else {
+            }
+        }
+        patternsCompiled = true;
+    }
+    
+    /**
+     * Check if the given text matches any of the trigger keys.
+     * Optimized with pre-compiled regex patterns and efficient string matching.
+     */
+    public boolean matches(String text) {
+        if (!enabled || text == null || keys.isEmpty()) {
+            return false;
+        }
+        
+        if (useRegex) {
+            ensurePatternsCompiled();
+            for (Pattern pattern : compiledPatterns) {
+                if (pattern.matcher(text).find()) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            // Optimized substring search using lowercase comparison
+            String lowerText = text.toLowerCase();
+            for (String k : keys) {
+                if (k == null || k.trim().isEmpty()) continue;
                 if (lowerText.contains(k.toLowerCase())) {
                     return true;
                 }
             }
+            return false;
         }
-        return false;
     }
     
     @Override

@@ -3,16 +3,16 @@
 *.class
 *.o
 *.obj
+*.out
 *.exe
 *.dll
 *.so
 *.a
-*.out
 
 # Dependencies
 lib/
-libs/
-dependencies/
+target/
+build/
 
 # Logs and temp files
 *.log
@@ -30,8 +30,14 @@ dependencies/
 *.swp
 *.swo
 
-# Build system
-target/
-build/
-dist/
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Package manager caches
+.gradle/
+.mypy_cache/
+.pytest_cache/
+__pycache__/
 ```

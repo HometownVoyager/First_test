@@ -15,16 +15,18 @@ import java.util.concurrent.TimeUnit;
 public class DeepSeekApiService {
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
     
-    private final OkHttpClient httpClient;
-    private final Gson gson;
+    // Shared OkHttpClient instance for better connection pooling (performance optimization)
+    private static final OkHttpClient httpClient = new OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectionPool(new okhttp3.ConnectionPool(10, 5, TimeUnit.MINUTES))
+            .build();
+    
+    private static final Gson gson = new GsonBuilder().create();
     
     public DeepSeekApiService() {
-        this.httpClient = new OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(120, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .build();
-        this.gson = new GsonBuilder().create();
+        // Use shared static instances
     }
     
     /**

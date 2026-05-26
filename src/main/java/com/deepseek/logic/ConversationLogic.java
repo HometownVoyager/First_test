@@ -6,7 +6,6 @@ import com.deepseek.storage.StorageManager;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Core business logic for conversation management, speaking strategies,
@@ -309,15 +308,20 @@ public class ConversationLogic {
     
     /**
      * Determine the next speaker based on the speak mode.
+     * Optimized with early exit and reduced stream operations.
      */
     public String determineNextSpeaker(Conversation conversation) {
         Set<String> participants = conversation.getParticipantRoleIds();
         Set<String> muted = conversation.getMutedRoleIds();
         
         // Filter out muted roles (except narrator can always speak)
-        List<String> activeParticipants = participants.stream()
-                .filter(id -> RoleCard.NARRATOR_ID.equals(id) || !muted.contains(id))
-                .collect(Collectors.toList());
+        // Optimized: use loop instead of stream for better performance
+        List<String> activeParticipants = new ArrayList<>(participants.size());
+        for (String id : participants) {
+            if (RoleCard.NARRATOR_ID.equals(id) || !muted.contains(id)) {
+                activeParticipants.add(id);
+            }
+        }
         
         if (activeParticipants.isEmpty()) {
             return RoleCard.NARRATOR_ID;
@@ -333,17 +337,25 @@ public class ConversationLogic {
                 return activeParticipants.get(0);
                 
             case ROUND_ROBIN:
-                // Find the role with the fewest messages
+                // Find the role with the fewest messages - optimized without stream
                 Map<String, Integer> counts = conversation.getMessageCounts();
-                return activeParticipants.stream()
-                        .min(Comparator.comparingInt(id -> counts.getOrDefault(id, 0)))
-                        .orElse(activeParticipants.get(0));
-                        
+                String minRole = null;
+                int minCount = Integer.MAX_VALUE;
+                for (String id : activeParticipants) {
+                    int count = counts.getOrDefault(id, 0);
+                    if (count < minCount) {
+                        minCount = count;
+                        minRole = id;
+                    }
+                }
+                return minRole != null ? minRole : activeParticipants.get(0);
+                
             case AUTO:
             default:
                 // Return the last assistant speaker's role, or first active
-                for (int i = conversation.getMessages().size() - 1; i >= 0; i--) {
-                    Message msg = conversation.getMessages().get(i);
+                List<Message> messages = conversation.getMessages();
+                for (int i = messages.size() - 1; i >= 0; i--) {
+                    Message msg = messages.get(i);
                     if (msg.getRole() == Message.Role.ASSISTANT && 
                         activeParticipants.contains(msg.getRoleId())) {
                         // Return a different role if possible
@@ -361,6 +373,7 @@ public class ConversationLogic {
     
     /**
      * Build the context messages for API request, including world book injection.
+     * Optimized with StringBuilder and reduced object allocations.
      */
     public List<Message> buildContextMessages(Conversation conversation, String currentSpeakerId) {
         List<Message> context = new ArrayList<>();
@@ -382,10 +395,11 @@ public class ConversationLogic {
         if (conversation.getWorldBookId() != null) {
             WorldBook book = getWorldBook(conversation.getWorldBookId());
             if (book != null) {
-                // Get the last user message for matching
+                // Get the last user message for matching - optimized search
                 String lastUserMessage = null;
-                for (int i = conversation.getMessages().size() - 1; i >= 0; i--) {
-                    Message msg = conversation.getMessages().get(i);
+                List<Message> messages = conversation.getMessages();
+                for (int i = messages.size() - 1; i >= 0; i--) {
+                    Message msg = messages.get(i);
                     if (msg.getRole() == Message.Role.USER) {
                         lastUserMessage = msg.getContent();
                         break;
@@ -395,7 +409,8 @@ public class ConversationLogic {
                 if (lastUserMessage != null) {
                     List<WorldBookEntry> matchingEntries = book.findMatchingEntries(lastUserMessage);
                     for (WorldBookEntry entry : matchingEntries) {
-                        systemPrompt.append("\n\n[World Info: ").append(entry.getComment() != null ? 
+                        systemPrompt.append("\n\n[World Info: ");
+                        systemPrompt.append(entry.getComment() != null ? 
                                 entry.getComment() : entry.getKey()).append("]\n");
                         systemPrompt.append(entry.getContent());
                     }
@@ -410,6 +425,10 @@ public class ConversationLogic {
         }
         
         // Add conversation history (excluding SYSTEM messages to avoid duplicates)
+        // Pre-size the list to avoid reallocations
+        int estimatedSize = conversation.getMessages().size();
+        context.ensureCapacity(estimatedSize + 1);
+        
         for (Message msg : conversation.getMessages()) {
             if (msg.getRole() != Message.Role.SYSTEM) {
                 context.add(msg);
